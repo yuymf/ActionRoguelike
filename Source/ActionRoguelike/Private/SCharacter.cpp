@@ -99,6 +99,18 @@ void ASCharacter::MoveRight(float value)
 
 void ASCharacter::PrimaryAttack()
 {
+	// ¹¥»÷¶¯»­
+	PlayAnimMontage(AttackAnim);
+
+	//¶¨Ê±Æ÷
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+	// GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
+
+	
+}
+
+void ASCharacter::PrimaryAttack_TimeElapsed()
+{
 	//¹¥»÷·¢ÉäÎ»ÖÃ£¬ÔÚ¹Ç÷ÀÊ÷ÖÐÑ°ÕÒ
 	FVector HandLocarion = GetMesh()->GetSocketLocation("Muzzle_01");
 
