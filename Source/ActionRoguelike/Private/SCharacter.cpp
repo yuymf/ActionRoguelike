@@ -1,10 +1,11 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-
 #include "SCharacter.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "DrawDebugHelpers.h"
+#include "SInteractionComponent.h"
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -27,6 +28,8 @@ ASCharacter::ASCharacter()
 
 	//false:第三人称；true：第一人称：鼠标-镜头-人物：一致
 	bUseControllerRotationYaw = false;
+
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("interactionComp");
 }
 
 // Called when the game starts or when spawned
@@ -36,12 +39,26 @@ void ASCharacter::BeginPlay()
 	
 }
 
-
 // Called every frame
 void ASCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// -- Rotation Visualization -- //
+	const float DrawScale = 100.0f;
+	const float Thickness = 5.0f;
+
+	FVector LineStart = GetActorLocation();
+	// Offset to the right of pawn
+	LineStart += GetActorRightVector() * 100.0f;
+	// Set line end in direction of the actor's forward
+	FVector ActorDirection_LineEnd = LineStart + (GetActorForwardVector() * 100.0f);
+	// Draw Actor's Direction
+	DrawDebugDirectionalArrow(GetWorld(), LineStart, ActorDirection_LineEnd, DrawScale, FColor::Yellow, false, 0.0f, 0, Thickness);
+
+	FVector ControllerDirection_LineEnd = LineStart + (GetControlRotation().Vector() * 100.0f);
+	// Draw 'Controller' Rotation ('PlayerController' that 'possessed' this character)
+	DrawDebugDirectionalArrow(GetWorld(), LineStart, ControllerDirection_LineEnd, DrawScale, FColor::Green, false, 0.0f, 0, Thickness);
 }
 
 // Called to bind functionality to input
@@ -56,6 +73,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimarInteract);
 }
 
 void ASCharacter::MoveForward(float value)
@@ -91,4 +109,12 @@ void ASCharacter::PrimaryAttack()
 
 	//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP,2.（原点，方向），3碰撞。
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+}
+
+void ASCharacter::PrimarInteract()
+{
+	if (InteractionComp)
+	{
+		InteractionComp->PrimaryInteract();
+	}
 }
