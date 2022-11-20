@@ -112,17 +112,21 @@ void ASCharacter::PrimaryAttack()
 
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
-	//攻击发射位置，在骨骼树中寻找
-	FVector HandLocarion = GetMesh()->GetSocketLocation("Muzzle_01");
+	//	How to Assert? : if(ensure/ensureAlways(ProjectileClass))
+	if (ensure(ProjectileClass))
+	{
+		//攻击发射位置，在骨骼树中寻找
+		FVector HandLocarion = GetMesh()->GetSocketLocation("Muzzle_01");
 
-	FTransform SpawnTM = FTransform(GetControlRotation(), HandLocarion);
+		FTransform SpawnTM = FTransform(GetControlRotation(), HandLocarion);
 
-	FActorSpawnParameters SpawnParams;
-	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;		//E
-	SpawnParams.Instigator = this;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;		//E
+		SpawnParams.Instigator = this;
 
-	//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP,2.（原点，方向），3碰撞。
-	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+		//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP,2.（原点，方向），3碰撞。
+		GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+	}
 }
 
 void ASCharacter::PrimarInteract()
