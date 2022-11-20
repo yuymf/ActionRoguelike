@@ -118,6 +118,7 @@ void ASCharacter::PrimaryAttack_TimeElapsed()
 
 	FActorSpawnParameters SpawnParams;
 	SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;		//E
+	SpawnParams.Instigator = this;
 
 	//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP,2.（原点，方向），3碰撞。
 	GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
