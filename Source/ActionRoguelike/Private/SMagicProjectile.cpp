@@ -4,6 +4,7 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Particles/ParticleSystemComponent.h"
+#include <SAttributeComponent.h>
 
 // Sets default values
 ASMagicProjectile::ASMagicProjectile()
@@ -12,10 +13,16 @@ ASMagicProjectile::ASMagicProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
+
+	// 设置碰撞事件
+	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnActorOverlap);
+
+	//碰撞参数设置
+	SphereComp->SetCollisionProfileName("Projectile");
 	//SphereComp->SetCollisionObjectType(ECC_WorldDynamic);
 	//SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	//SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	SphereComp->SetCollisionProfileName("Projectile");
+
 	RootComponent = SphereComp;
 
 	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
@@ -26,6 +33,22 @@ ASMagicProjectile::ASMagicProjectile()
 	MovementComp->bRotationFollowsVelocity = true;
 	MovementComp->bInitialVelocityInLocalSpace = true;
 
+}
+
+void ASMagicProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (OtherActor)
+	{。。
+		USAttributeComponent* AttributeComp = Cast<USAttributeComponent>(OtherActor->GetComponentByClass(USAttributeComponent::StaticClass()));
+		// 碰墙检测
+		if (AttributeComp)
+		{
+			//造成20点伤害
+			AttributeComp->ApplyHealthChange(-20.0f);
+			// 一旦造成伤害就销毁，避免穿过角色继续计算
+			Destroy();
+		}
+	}
 }
 
 // Called when the game starts or when spawned

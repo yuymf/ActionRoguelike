@@ -9,6 +9,7 @@
 class USpringArmComponent;
 class UCameraComponent;
 class USInteractionComponent;
+class USAttributeComponent;
 class UAnimMontage;
 
 UCLASS()
@@ -24,7 +25,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	TSubclassOf<AActor>	ProjectileClass;								// T
-	
 	
 	UPROPERTY(EditAnywhere, Category = "Attack")
 	UAnimMontage* AttackAnim;
@@ -42,6 +42,9 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USInteractionComponent* InteractionComp;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USAttributeComponent* AttributeComp;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -51,7 +54,7 @@ protected:
 	void PrimaryAttack();
 	void PrimaryAttack_TimeElapsed();
 
-	void PrimarInteract();
+	void PrimaryInteract();
 
 public:	
 	// Called every frame

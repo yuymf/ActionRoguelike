@@ -6,6 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 #include "SInteractionComponent.h"
+#include <SAttributeComponent.h>
 
 // Sets default values
 ASCharacter::ASCharacter()
@@ -29,7 +30,9 @@ ASCharacter::ASCharacter()
 	//false:第三人称；true：第一人称：鼠标-镜头-人物：一致
 	bUseControllerRotationYaw = false;
 
-	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("interactionComp");
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
+	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+
 }
 
 // Called when the game starts or when spawned
@@ -73,7 +76,7 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
-	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimarInteract);
+	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
 }
 
@@ -129,7 +132,7 @@ void ASCharacter::PrimaryAttack_TimeElapsed()
 	}
 }
 
-void ASCharacter::PrimarInteract()
+void ASCharacter::PrimaryInteract()
 {
 	if (InteractionComp)
 	{
