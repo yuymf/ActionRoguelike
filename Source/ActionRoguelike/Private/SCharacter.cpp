@@ -24,44 +24,16 @@ ASCharacter::ASCharacter()
 	CameraComp = CreateDefaultSubobject<UCameraComponent>("cameraComp");
 	CameraComp->SetupAttachment(SpringArmComp);
 
+	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
+	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
+
 	//人物朝加速度方向移动
 	GetCharacterMovement()->bOrientRotationToMovement = true;
 
 	//false:第三人称；true：第一人称：鼠标-镜头-人物：一致
 	bUseControllerRotationYaw = false;
 
-	InteractionComp = CreateDefaultSubobject<USInteractionComponent>("InteractionComp");
-	AttributeComp = CreateDefaultSubobject<USAttributeComponent>("AttributeComp");
-
-}
-
-// Called when the game starts or when spawned
-void ASCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void ASCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	// -- Rotation Visualization -- //
-	const float DrawScale = 100.0f;
-	const float Thickness = 5.0f;
-
-	FVector LineStart = GetActorLocation();
-	// Offset to the right of pawn
-	LineStart += GetActorRightVector() * 100.0f;
-	// Set line end in direction of the actor's forward
-	FVector ActorDirection_LineEnd = LineStart + (GetActorForwardVector() * 100.0f);
-	// Draw Actor's Direction
-	DrawDebugDirectionalArrow(GetWorld(), LineStart, ActorDirection_LineEnd, DrawScale, FColor::Yellow, false, 0.0f, 0, Thickness);
-
-	FVector ControllerDirection_LineEnd = LineStart + (GetControlRotation().Vector() * 100.0f);
-	// Draw 'Controller' Rotation ('PlayerController' that 'possessed' this character)
-	DrawDebugDirectionalArrow(GetWorld(), LineStart, ControllerDirection_LineEnd, DrawScale, FColor::Green, false, 0.0f, 0, Thickness);
+	AttackAnimDelay = 0.2f;
 }
 
 // Called to bind functionality to input
@@ -76,7 +48,11 @@ void ASCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponen
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 
 	PlayerInputComponent->BindAction("PrimaryAttack", IE_Pressed, this, &ASCharacter::PrimaryAttack);
+	// Used generic name 'SecondaryAttack' for binding
+	PlayerInputComponent->BindAction("SecondAttack", IE_Pressed, this, &ASCharacter::BlackHoleAttack);
+	PlayerInputComponent->BindAction("Dash", IE_Pressed, this, &ASCharacter::Dash);
 	PlayerInputComponent->BindAction("PrimaryInteract", IE_Pressed, this, &ASCharacter::PrimaryInteract);
+
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ASCharacter::Jump);
 }
 
@@ -107,28 +83,80 @@ void ASCharacter::PrimaryAttack()
 	PlayAnimMontage(AttackAnim);
 
 	//定时器
-	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, 0.2f);
+	GetWorldTimerManager().SetTimer(TimerHandle_PrimaryAttack, this, &ASCharacter::PrimaryAttack_TimeElapsed, AttackAnimDelay);
 	// GetWorldTimerManager().ClearTimer(TimerHandle_PrimaryAttack);
-
-	
 }
 
 void ASCharacter::PrimaryAttack_TimeElapsed()
 {
-	//	How to Assert? : if(ensure/ensureAlways(ProjectileClass))
-	if (ensure(ProjectileClass))
+	SpawnProjectile(ProjectileClass);
+}
+
+void ASCharacter::BlackHoleAttack()
+{
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_BlackHoleAttack, this, &ASCharacter::BlackHoleAttack_TimeElapsed, AttackAnimDelay);
+}
+
+void ASCharacter::BlackHoleAttack_TimeElapsed()
+{
+	SpawnProjectile(BlackHoleProjectileClass);
+}
+
+void ASCharacter::Dash()
+{
+	PlayAnimMontage(AttackAnim);
+
+	GetWorldTimerManager().SetTimer(TimerHandle_Dash, this, &ASCharacter::Dash_TimeElapsed, AttackAnimDelay);
+}
+
+void ASCharacter::Dash_TimeElapsed()
+{
+	SpawnProjectile(DashProjectileClass);
+}
+
+void ASCharacter::SpawnProjectile(TSubclassOf<AActor> ClassToSpawn)
+{
+	if (ensure(ClassToSpawn))
 	{
 		//攻击发射位置，在骨骼树中寻找
-		FVector HandLocarion = GetMesh()->GetSocketLocation("Muzzle_01");
+		FVector HandLocation = GetMesh()->GetSocketLocation("Muzzle_01");
 
-		FTransform SpawnTM = FTransform(GetControlRotation(), HandLocarion);
-
+		// 此处设置碰撞检测规则为：即使碰撞也总是生成
 		FActorSpawnParameters SpawnParams;
-		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;		//E
+		SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 		SpawnParams.Instigator = this;
 
-		//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP,2.（原点，方向），3碰撞。
-		GetWorld()->SpawnActor<AActor>(ProjectileClass, SpawnTM, SpawnParams);
+		FCollisionShape Shape;
+		Shape.SetSphere(20.0f);
+
+		// Ignore Player
+		FCollisionQueryParams Params;
+		Params.AddIgnoredActor(this);
+
+		FCollisionObjectQueryParams ObjParams;
+		ObjParams.AddObjectTypesToQuery(ECC_WorldDynamic);
+		ObjParams.AddObjectTypesToQuery(ECC_WorldStatic);
+		ObjParams.AddObjectTypesToQuery(ECC_Pawn);
+
+		FHitResult Hit;
+		FVector TraceStart = CameraComp->GetComponentLocation();
+		// endpoint far into the look-at distance (not too far, still adjust somewhat towards crosshair on a miss)
+		FVector TraceEnd = CameraComp->GetComponentLocation() + (GetControlRotation().Vector() * 5000);
+
+		// true if we got to a blocking hit (Alternative: SweepSingleByChannel with ECC_WorldDynamic)
+		if (GetWorld()->SweepSingleByObjectType(Hit, TraceStart, TraceEnd, FQuat::Identity, ObjParams, Shape, Params))
+		{
+			// Overwrite trace end with impact point in world
+			TraceEnd = Hit.ImpactPoint;
+		}
+
+		// find new direction/rotation from Hand pointing to impact point in world.
+		FRotator ProjRotation = FRotationMatrix::MakeFromX(TraceEnd - HandLocation).Rotator();
+		FTransform SpawnTM = FTransform(ProjRotation, HandLocation);
+		//攻击的出生位置设置：1.用蓝图绑定至magicprojectileBP, 2.(方向, 原点)，3.碰撞。
+		GetWorld()->SpawnActor<AActor>(ClassToSpawn, SpawnTM, SpawnParams);
 	}
 }
 

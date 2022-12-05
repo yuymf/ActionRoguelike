@@ -15,7 +15,7 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>("MeshComp");
 	//Ä£ÄâÎïÀí
 	MeshComp->SetSimulatePhysics(true);
-	//MeshComp->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
+	MeshComp->SetCollisionProfileName(UCollisionProfile::PhysicsActor_ProfileName);
 	RootComponent = MeshComp;
 
 	ForceComp = CreateDefaultSubobject<URadialForceComponent>("ForceComp");

@@ -13,16 +13,13 @@ ASMagicProjectile::ASMagicProjectile()
 	PrimaryActorTick.bCanEverTick = true;
 	
 	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
-
 	// 设置碰撞事件
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnActorOverlap);
-
 	//碰撞参数设置
 	SphereComp->SetCollisionProfileName("Projectile");
 	//SphereComp->SetCollisionObjectType(ECC_WorldDynamic);
 	//SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
 	//SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-
 	RootComponent = SphereComp;
 
 	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
