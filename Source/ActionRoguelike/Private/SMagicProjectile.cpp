@@ -9,27 +9,10 @@
 // Sets default values
 ASMagicProjectile::ASMagicProjectile()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-	
-	SphereComp = CreateDefaultSubobject<USphereComponent>("SphereComp");
-	// 设置碰撞事件
+	SphereComp->SetSphereRadius(20.0f);
 	SphereComp->OnComponentBeginOverlap.AddDynamic(this, &ASMagicProjectile::OnActorOverlap);
-	//碰撞参数设置
-	SphereComp->SetCollisionProfileName("Projectile");
-	//SphereComp->SetCollisionObjectType(ECC_WorldDynamic);
-	//SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-	//SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	RootComponent = SphereComp;
 
-	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
-	EffectComp->SetupAttachment(SphereComp);
-
-	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComp");
-	MovementComp->InitialSpeed = 1000.0f;
-	MovementComp->bRotationFollowsVelocity = true;
-	MovementComp->bInitialVelocityInLocalSpace = true;
-
+	DamegeAmount = 20.0f;
 }
 
 void ASMagicProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -41,24 +24,11 @@ void ASMagicProjectile::OnActorOverlap(UPrimitiveComponent* OverlappedComponent,
 		if (AttributeComp)
 		{
 			//造成20点伤害
-			AttributeComp->ApplyHealthChange(-20.0f);
-			// 一旦造成伤害就销毁，避免穿过角色继续计算
-			Destroy();
+			AttributeComp->ApplyHealthChange(-DamegeAmount);
+			// Only explode when we hit something valid
+			Explode();
 		}
 	}
 }
 
-// Called when the game starts or when spawned
-void ASMagicProjectile::BeginPlay()
-{
-	Super::BeginPlay();
-	
-}
-
-// Called every frame
-void ASMagicProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-}
 
