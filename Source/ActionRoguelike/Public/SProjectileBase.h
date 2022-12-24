@@ -9,6 +9,9 @@
 class USphereComponent;
 class UProjectileMovementComponent;
 class UParticleSystemComponent;
+class UAudioComponent;
+class USoundCue;
+//class UCameraShake;
 
 //1.UCLASS(abstract) ：Abstract类修饰符将类声明为“抽象基类”，这样会阻止用户在虚幻编辑器中向这个世界中添加这个类的Actor，或者在游戏过程中创建这个类的实例。
 //2.UCLASS(blueprintable) ：指定该类为创建蓝图的可接受基类。
@@ -31,6 +34,23 @@ protected:
 	// 粒子系统
 	UPROPERTY(EditDefaultsOnly, Category = "Effects")
 	UParticleSystem* ImpactVFX;
+
+	// 相机摇晃
+	//UPROPERTY(EditDefaultsOnly, Category = "Effects|Shake")
+	//TSubclassOf<UCameraShake> ImpactShake;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "Effects|Shake")
+	//float ImpactShakeInnerRadius;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "Effects|Shake")
+	//float ImpactShakeOuterRadius;
+
+	// 音频
+	UPROPERTY(EditDefaultsOnly, Category = "Effects")
+	USoundCue* ImpactSound;
+
+	UPROPERTY(VisibleAnywhere, Category = "Components")
+	UAudioComponent* AudioComp;
 
 	// 球
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

@@ -6,6 +6,9 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Components/AudioComponent.h"
+#include "Sound/SoundCue.h"
+//#include "Camera/CameraShake.h"
 
 // Sets default values
 ASProjectileBase::ASProjectileBase()
@@ -19,11 +22,17 @@ ASProjectileBase::ASProjectileBase()
 	EffectComp = CreateDefaultSubobject<UParticleSystemComponent>("EffectComp");
 	EffectComp->SetupAttachment(RootComponent);
 
+	AudioComp = CreateDefaultSubobject<UAudioComponent>("AudioComp");
+	AudioComp->SetupAttachment(RootComponent);
+
 	MovementComp = CreateDefaultSubobject<UProjectileMovementComponent>("MovementComp");
 	MovementComp->bRotationFollowsVelocity = true;	// 匹配速度方向
 	MovementComp->bInitialVelocityInLocalSpace = true;
 	MovementComp->ProjectileGravityScale = 0.0f;	// 重力为0
 	MovementComp->InitialSpeed = 8000.0f;
+
+	//ImpactShakeInnerRadius = 0.0f;
+	//ImpactShakeOuterRadius = 1500.0f;
 
 }
 
@@ -41,6 +50,8 @@ void ASProjectileBase::Explode_Implementation()
 	if (ensure(!IsPendingKill())) // can be find in PostInitializeComponents()
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(this, ImpactVFX, GetActorLocation(), GetActorRotation()); // can be found in MagicProjectileBP
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+		//UGameplayStatics::PlayWorldCameraShake(this, ImPactShake, GetActorLocation(), ImpactShakeInnerRadius, ImpactShakeOuterRadius);
 
 		Destroy();
 	}
