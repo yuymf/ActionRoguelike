@@ -6,7 +6,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "DrawDebugHelpers.h"
 #include "SInteractionComponent.h"
-#include <SAttributeComponent.h>
+#include "SAttributeComponent.h"
 #include "Kismet/GameplayStatics.h"
 
 // Sets default values
